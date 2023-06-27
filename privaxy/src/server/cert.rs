@@ -15,6 +15,7 @@ use openssl::{
 };
 use rustls::{Certificate, PrivateKey, ServerConfig};
 use std::{str::FromStr, sync::Arc};
+use chrono::{Duration, Utc};
 use tokio::sync::Mutex;
 use uluru::LRUCache;
 
@@ -108,10 +109,13 @@ impl SignedWithCaCert {
             .unwrap();
         cert_builder.set_pubkey(private_key).unwrap();
 
-        let not_before = Asn1Time::days_from_now(0).unwrap();
+        let not_before_time = Utc::now() - Duration::days(1);
+        let not_after_time = not_before_time + Duration::days(365);
+
+        let not_before = Asn1Time::from_unix(not_before_time.timestamp()).unwrap();
         cert_builder.set_not_before(&not_before).unwrap();
 
-        let not_after = Asn1Time::days_from_now(365).unwrap();
+        let not_after = Asn1Time::from_unix(not_after_time.timestamp()).unwrap();
         cert_builder.set_not_after(&not_after).unwrap();
 
         cert_builder
